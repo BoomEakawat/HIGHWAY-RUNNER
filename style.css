@@ -306,9 +306,19 @@ canvas {
 }
 
 /* Diagnostics */
+/* Side Panel จัดวางด้านขวา */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 280px;
+  margin-top: 25px; /* ปรับระดับให้ตรงกับขอบจอด้านข้าง */
+}
+
+/* ปรับ Diagnostics Box ให้พอดีกับ Sidebar */
 .box {
-  max-width: 520px;
-  margin: 26px auto 0;
+  width: 100%;
+  margin: 0;
   padding: 18px 20px;
   border-radius: 14px;
   background: var(--bg-panel);
@@ -367,4 +377,52 @@ body.day-theme .box {
 @media (max-width: 480px) {
   .marquee { padding: 12px 20px; }
   button { padding: 12px 18px; font-size: 14px; }
+}
+
+/* Color Picker Group */
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel);
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px var(--box-shadow-color);
+}
+
+.color-picker-label {
+  font-family: 'Kanit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.color-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  min-width: unset;
+  border-radius: 50%;
+  background: var(--swatch-color) !important;
+  border: 2px solid transparent;
+  box-shadow: none !important; /* ล้างเงาสีน้ำตาล/แดง 3D เดิมออก */
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.18);
+}
+
+.color-swatch.active {
+  border-color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px var(--swatch-color) !important; /* แสดงแสง Glow เฉพาะตอนเลือก */
 }

@@ -443,3 +443,23 @@ function drawGame() {
 
 updateThemeVisuals();
 drawGame();
+
+// ===============================
+// Player Customization
+// ===============================
+function changePlayerColor(colorHex, buttonEl) {
+  playerColors.body = colorHex;
+
+  // อัปเดตสถานะ Active ของปุ่มที่เลือก
+  document.querySelectorAll(".color-swatch").forEach(swatch => {
+    swatch.classList.remove("active");
+  });
+  if (buttonEl) {
+    buttonEl.classList.add("active");
+  }
+
+  // วาดเฟรมใหม่ทันทีหากเกมยังไม่เริ่ม
+  if (!gameRunning) {
+    drawGame();
+  }
+}

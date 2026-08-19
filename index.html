@@ -30,6 +30,19 @@
   <div class="controls">
     <button id="startBtn" type="button" onclick="initAI()">🔑 START ENGINE (CAMERA)</button>
     <button type="button" onclick="restartGame()">🔧 PIT STOP / RESTART</button>
+    
+    <!-- ส่วนเลือกสีรถ -->
+    <div class="color-picker-group">
+      <span class="color-picker-label">CAR COLOR:</span>
+      <div class="color-swatches">
+        <button type="button" class="color-swatch active" style="--swatch-color: #1d3557;" onclick="changePlayerColor('#1d3557', this)" title="Navy Blue"></button>
+        <button type="button" class="color-swatch" style="--swatch-color: #e63946;" onclick="changePlayerColor('#e63946', this)" title="Racing Red"></button>
+        <button type="button" class="color-swatch" style="--swatch-color: #ffd166;" onclick="changePlayerColor('#ffd166', this)" title="Speed Yellow"></button>
+        <button type="button" class="color-swatch" style="--swatch-color: #2a9d8f;" onclick="changePlayerColor('#2a9d8f', this)" title="Emerald Green"></button>
+        <button type="button" class="color-swatch" style="--swatch-color: black;" onclick="changePlayerColor('black', this)" title="Neon Purple"></button>
+        <button type="button" class="color-swatch" style="--swatch-color: #f4f4f4;" onclick="changePlayerColor('#f4f4f4', this)" title="Pure White"></button>
+      </div>
+    </div>
   </div>
 
   <div class="hud">
@@ -42,6 +55,7 @@
   </div>
 
   <div class="container">
+    <!-- 1. Dash Cam -->
     <div class="screen-unit">
       <div class="screen-label">Dash Cam</div>
       <div class="bezel headlight">
@@ -51,6 +65,7 @@
       </div>
     </div>
 
+    <!-- 2. Road View -->
     <div class="screen-unit">
       <div class="screen-label">Road View</div>
       <div class="bezel taillight">
@@ -59,9 +74,26 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="box">
+    <!-- 3. Diagnostics Side Panel (ย้ายมาไว้ตรงนี้) -->
+    <div class="side-panel">
+      <div class="box">
+        <h3>Diagnostics</h3>
+        <div id="result">Result: -</div>
+        <div id="confidence">Confidence: -</div>
+        <div id="action">Status: Not started</div>
+      </div>
+
+      <div class="box">
+        <h3>Class Confidence</h3>
+        <div id="class1" class="score">Class 1: -</div>
+        <div id="class2" class="score">Class 2: -</div>
+        <div id="class3" class="score">Class 3: -</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- <div class="box">
     <h3>Diagnostics</h3>
     <div id="result">Result: -</div>
     <div id="confidence">Confidence: -</div>
@@ -73,7 +105,7 @@
     <div id="class1" class="score">Class 1: -</div>
     <div id="class2" class="score">Class 2: -</div>
     <div id="class3" class="score">Class 3: -</div>
-  </div>
+  </div> -->
 
   <!-- Library Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
