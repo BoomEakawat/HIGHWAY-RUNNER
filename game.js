@@ -108,6 +108,47 @@ function createRoadMarks() {
   }
 }
 
+// function startGame() {
+//   if (countdownTimer) clearInterval(countdownTimer);
+
+//   gameRunning = true;
+//   gameOver = false;
+//   score = 0;
+//   frame = 0;
+//   roadScroll = 0;
+//   obstacleSpeed = 6;
+//   obstacles = [];
+
+//   // บังคับให้อยู่เลนกลางเสมอตอนเริ่มเกม
+//   currentLane = 1;
+//   player.x = lanes[1] - (player.width / 2);
+
+//   createRoadMarks();
+
+//   // เริ่มนับถอยหลัง 3 วินาที
+//   isCountingDown = true;
+//   countdownText = "3";
+//   document.getElementById("gameStatus").innerHTML = "สถานะเกม: เตรียมพร้อม...";
+//   document.getElementById("gameScore").innerHTML = "คะแนน: 0";
+
+//   let count = 3;
+//   countdownTimer = setInterval(() => {
+//     count--;
+//     if (count > 0) {
+//       countdownText = count.toString();
+//     } else if (count === 0) {
+//       countdownText = "GO!";
+//       if (typeof startEngineSound === "function") startEngineSound();
+//     } else {
+//       clearInterval(countdownTimer);
+//       countdownTimer = null;
+//       isCountingDown = false;
+//       countdownText = "";
+//       document.getElementById("gameStatus").innerHTML = "สถานะเกม: กำลังวิ่ง!";
+//     }
+//   }, 1000);
+// }
+
 function startGame() {
   if (countdownTimer) clearInterval(countdownTimer);
 
@@ -119,15 +160,18 @@ function startGame() {
   obstacleSpeed = 6;
   obstacles = [];
 
-  // บังคับให้อยู่เลนกลางเสมอตอนเริ่มเกม
   currentLane = 1;
   player.x = lanes[1] - (player.width / 2);
 
   createRoadMarks();
 
-  // เริ่มนับถอยหลัง 3 วินาที
+  // เรียกใช้คำสั่งสตาร์ตและต่อเข้าเสียงขับแบบไร้รอยต่อ
+  if (typeof playIgnitionAndDrive === "function") playIgnitionAndDrive();
+
   isCountingDown = true;
   countdownText = "3";
+  if (typeof playCountdownBeep === "function") playCountdownBeep(false);
+
   document.getElementById("gameStatus").innerHTML = "สถานะเกม: เตรียมพร้อม...";
   document.getElementById("gameScore").innerHTML = "คะแนน: 0";
 
@@ -136,9 +180,10 @@ function startGame() {
     count--;
     if (count > 0) {
       countdownText = count.toString();
+      if (typeof playCountdownBeep === "function") playCountdownBeep(false);
     } else if (count === 0) {
       countdownText = "GO!";
-      if (typeof startEngineSound === "function") startEngineSound();
+      if (typeof playCountdownBeep === "function") playCountdownBeep(true);
     } else {
       clearInterval(countdownTimer);
       countdownTimer = null;
@@ -149,24 +194,39 @@ function startGame() {
   }, 1000);
 }
 
-function restartGame() {
-  if (typeof isRunning !== "undefined" && isRunning) startGame();
-  else startGame();
-}
-
 function endGame() {
   if (countdownTimer) clearInterval(countdownTimer);
   gameOver = true;
   gameRunning = false;
   isCountingDown = false;
 
+  // 4. เสียงชนระเบิด + เสียงพูด "Game Over"
   if (typeof playCrashSound === "function") playCrashSound();
-  if (typeof playGameOverMelody === "function") {
-    setTimeout(playGameOverMelody, 450);
-  }
+  setTimeout(() => {
+    if (typeof speakGameOver === "function") speakGameOver();
+  }, 300);
 
   document.getElementById("gameStatus").innerHTML = "สถานะเกม: ชนแล้ว!";
 }
+
+function restartGame() {
+  if (typeof isRunning !== "undefined" && isRunning) startGame();
+  else startGame();
+}
+
+// function endGame() {
+//   if (countdownTimer) clearInterval(countdownTimer);
+//   gameOver = true;
+//   gameRunning = false;
+//   isCountingDown = false;
+
+//   if (typeof playCrashSound === "function") playCrashSound();
+//   if (typeof playGameOverMelody === "function") {
+//     setTimeout(playGameOverMelody, 450);
+//   }
+
+//   document.getElementById("gameStatus").innerHTML = "สถานะเกม: ชนแล้ว!";
+// }
 
 // ===============================
 // Physics & Collision
