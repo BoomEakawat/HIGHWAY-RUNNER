@@ -105,7 +105,23 @@ async function predict() {
 }
 
 function drawPose(pose) {
-  cameraCtx.drawImage(webcam.canvas, 0, 0);
+  const cameraCanvas = document.getElementById("cameraCanvas");
+  if (!cameraCanvas || !cameraCtx) return;
+
+  // 1. เคลียร์ภาพเก่าทิ้งทุกเฟรม ป้องกันภาพซ้อน
+  cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+  // 2. สั่งยืดภาพวิดีโอจากกล้องให้เต็มกรอบ Canvas (400x400) เสมอ
+  if (webcam && webcam.canvas) {
+    cameraCtx.drawImage(
+      webcam.canvas, 
+      0, 0, 
+      cameraCanvas.width, 
+      cameraCanvas.height
+    );
+  }
+
+  // 3. วาดเส้นและจุดโครงร่างร่างกาย
   if (pose) {
     tmPose.drawKeypoints(pose.keypoints, 0.5, cameraCtx);
     tmPose.drawSkeleton(pose.keypoints, 0.5, cameraCtx);
