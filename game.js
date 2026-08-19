@@ -4,7 +4,7 @@
 const gameCanvas = document.getElementById("gameCanvas");
 const gameCtx = gameCanvas.getContext("2d");
 
-let isDayMode = false; // ค่าเริ่มต้นเป็นกลางคืน (Night Mode)
+let isDayMode = false;
 let gameRunning = false;
 let gameOver = false;
 let score = 0;
@@ -118,7 +118,8 @@ function startGame() {
 }
 
 function restartGame() {
-  if (isRunning) startGame();
+  if (typeof isRunning !== "undefined" && isRunning) startGame();
+  else startGame();
 }
 
 function endGame() {
@@ -191,97 +192,137 @@ function checkCollision(a, b) {
 // ===============================
 // Graphic Helpers
 // ===============================
-function roundRectPath(ctx, x, y, w, h, r) {
+function drawRoundedRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y + w, x, y, r);
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+  }
   ctx.closePath();
+}
+
+// ฟังก์ชันยิงลำแสงไฟหน้ารถเฉพาะด้านหน้า (ทรงกรวย Trapezoid)
+// ฟังก์ชันยิงลำแสงไฟหน้ารถแบบ Soft & Diffused
+function drawHeadlightBeams(ctx, x, y, w, h) {
+  if (isDayMode) return;
+
+  const beamLength = 175; // ขยายระยะแสงให้ยาวขึ้นเล็กน้อยเพื่อความสมูท
+  const beamSpread = 38;  // บานปลายแสงออกให้กว้างขึ้น
+
+  ctx.save();
+  // ใช้โหมด screen เพื่อให้แสงสว่างกลืนไปกับพื้นถนนและเส้นทาง
+  ctx.globalCompositeOperation = "screen";
+
+  const createSoftBeamGradient = (originX) => {
+    const grad = ctx.createLinearGradient(0, y, 0, y - beamLength);
+    grad.addColorStop(0, "rgba(255, 245, 180, 0.28)");  // แสงนุ่มตรงโคนไฟ
+    grad.addColorStop(0.25, "rgba(255, 238, 160, 0.15)");
+    grad.addColorStop(0.6, "rgba(255, 230, 140, 0.05)");
+    grad.addColorStop(0.85, "rgba(255, 225, 130, 0.015)");
+    grad.addColorStop(1, "rgba(255, 220, 120, 0)");
+    return grad;
+  };
+
+  // 1. ลำแสงดวงซ้าย
+  const leftX = x + 6;
+  ctx.fillStyle = createSoftBeamGradient(leftX);
+  ctx.beginPath();
+  ctx.moveTo(leftX - 3, y);
+  ctx.lineTo(leftX + 4, y);
+  ctx.quadraticCurveTo(leftX + 5, y - beamLength * 0.4, leftX + beamSpread * 0.55, y - beamLength + 12);
+  ctx.quadraticCurveTo(leftX, y - beamLength - 4, leftX - beamSpread * 0.65, y - beamLength + 12);
+  ctx.quadraticCurveTo(leftX - 4, y - beamLength * 0.4, leftX - 3, y);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. ลำแสงดวงขวา
+  const rightX = x + w - 10;
+  ctx.fillStyle = createSoftBeamGradient(rightX);
+  ctx.beginPath();
+  ctx.moveTo(rightX - 4, y);
+  ctx.lineTo(rightX + 3, y);
+  ctx.quadraticCurveTo(rightX + 4, y - beamLength * 0.4, rightX + beamSpread * 0.65, y - beamLength + 12);
+  ctx.quadraticCurveTo(rightX, y - beamLength - 4, rightX - beamSpread * 0.55, y - beamLength + 12);
+  ctx.quadraticCurveTo(rightX - 5, y - beamLength * 0.4, rightX - 4, y);
+  ctx.closePath();
+  ctx.fill();
+
+  // 3. วงแสงออโรร่าจางๆ หน้ารถ (Ambient Glow)
+  const centerGlow = ctx.createRadialGradient(
+    x + w / 2, y, 2,
+    x + w / 2, y - 20, 45
+  );
+  // centerGlow.addColorStop(0, "rgba(255, 245, 190, 0.18)");
+  // centerGlow.addColorStop(1, "rgba(255, 245, 190, 0)");
+  ctx.fillStyle = centerGlow;
+  ctx.beginPath();
+  ctx.arc(x + w / 2, y - 5, 45, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 function drawCar(ctx, x, y, w, h, type, colors) {
   ctx.save();
 
-  // เงา
-  ctx.fillStyle = isDayMode ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.28)";
-  roundRectPath(ctx, x - 1, y + 3, w + 2, h, 8);
+  // 1. เงาใต้ท้องรถ
+  ctx.fillStyle = isDayMode ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.45)";
+  drawRoundedRect(ctx, x - 1, y + 3, w + 2, h, 8);
   ctx.fill();
 
-  // ล้อ
-  const wheelW = 6, wheelH = h * 0.16;
+  // 2. ล้อรถ 4 ล้อ
+  const wheelW = 4;
+  const wheelH = 10;
   ctx.fillStyle = "#111214";
-  roundRectPath(ctx, x - 2, y + h * 0.12, wheelW, wheelH, 2); ctx.fill();
-  roundRectPath(ctx, x + w - wheelW + 2, y + h * 0.12, wheelW, wheelH, 2); ctx.fill();
-  roundRectPath(ctx, x - 2, y + h * 0.70, wheelW, wheelH, 2); ctx.fill();
-  roundRectPath(ctx, x + w - wheelW + 2, y + h * 0.70, wheelW, wheelH, 2); ctx.fill();
+  drawRoundedRect(ctx, x - 1, y + 8, wheelW, wheelH, 2); ctx.fill();
+  drawRoundedRect(ctx, x + w - wheelW + 1, y + 8, wheelW, wheelH, 2); ctx.fill();
+  drawRoundedRect(ctx, x - 1, y + h - 18, wheelW, wheelH, 2); ctx.fill();
+  drawRoundedRect(ctx, x + w - wheelW + 1, y + h - 18, wheelW, wheelH, 2); ctx.fill();
 
-  if (type === "truck") {
-    const boxH = h * 0.62;
-    ctx.fillStyle = colors.body;
-    roundRectPath(ctx, x, y + h - boxH, w, boxH, 4);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.25)";
-    ctx.lineWidth = 1;
-    for (let i = 1; i < 4; i++) {
-      const ly = y + h - boxH + (boxH / 4) * i;
-      ctx.beginPath(); ctx.moveTo(x + 3, ly); ctx.lineTo(x + w - 3, ly); ctx.stroke();
-    }
-    const cabH = h * 0.36;
-    ctx.fillStyle = colors.cab;
-    roundRectPath(ctx, x + w * 0.08, y, w * 0.84, cabH, 5);
-    ctx.fill();
-    ctx.fillStyle = colors.window;
-    roundRectPath(ctx, x + w * 0.18, y + cabH * 0.15, w * 0.64, cabH * 0.5, 3);
-    ctx.fill();
-  } else if (type === "pickup") {
-    const bedH = h * 0.55;
-    ctx.fillStyle = colors.body;
-    roundRectPath(ctx, x, y + h - bedH, w, bedH, 4);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.lineWidth = 1;
-    roundRectPath(ctx, x + 4, y + h - bedH + 4, w - 8, bedH - 8, 2);
-    ctx.stroke();
-    const cabH = h * 0.5;
-    ctx.fillStyle = colors.body;
-    roundRectPath(ctx, x, y, w, cabH, 6);
-    ctx.fill();
-    ctx.fillStyle = colors.window;
-    roundRectPath(ctx, x + w * 0.15, y + cabH * 0.2, w * 0.7, cabH * 0.45, 3);
-    ctx.fill();
-  } else if (type === "suv") {
-    ctx.fillStyle = colors.body;
-    roundRectPath(ctx, x, y, w, h, 9);
-    ctx.fill();
-    ctx.fillStyle = colors.window;
-    roundRectPath(ctx, x + w * 0.12, y + h * 0.16, w * 0.76, h * 0.55, 5);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.2)";
-    ctx.beginPath();
-    ctx.moveTo(x + w * 0.5, y + h * 0.16);
-    ctx.lineTo(x + w * 0.5, y + h * 0.71);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = colors.body;
-    roundRectPath(ctx, x, y, w, h, 11);
-    ctx.fill();
-    ctx.fillStyle = colors.window;
-    roundRectPath(ctx, x + w * 0.14, y + h * 0.14, w * 0.72, h * 0.28, 4);
-    ctx.fill();
-    roundRectPath(ctx, x + w * 0.16, y + h * 0.62, w * 0.68, h * 0.22, 4);
-    ctx.fill();
-  }
+  // 3. ตัวถังรถ
+  ctx.fillStyle = colors.body;
+  drawRoundedRect(ctx, x, y, w, h, 10);
+  ctx.fill();
 
-  // ไฟหน้า / ไฟท้าย
-  ctx.fillStyle = isDayMode ? "#ffe680" : "#fff4c2";
-  ctx.fillRect(x + 2, y + 1, 6, 3);
-  ctx.fillRect(x + w - 8, y + 1, 6, 3);
+  // 4. กระจกและห้องโดยสาร
+  const glassColor = colors.window || "#bcd4e6";
+  ctx.fillStyle = "#1c222b";
+  drawRoundedRect(ctx, x + 4, y + 10, w - 8, h - 22, 5);
+  ctx.fill();
 
+  // กระจกหน้า
+  ctx.fillStyle = glassColor;
+  drawRoundedRect(ctx, x + 6, y + 12, w - 12, 10, 3);
+  ctx.fill();
+
+  // หลังคารถ
+  ctx.fillStyle = colors.body;
+  drawRoundedRect(ctx, x + 6, y + 24, w - 12, h - 46, 2);
+  ctx.fill();
+
+  // กระจกหลัง
+  ctx.fillStyle = glassColor;
+  drawRoundedRect(ctx, x + 6, y + h - 20, w - 12, 6, 2);
+  ctx.fill();
+
+  // 5. หลอดไฟหน้ารถ
+  ctx.fillStyle = "#fff4c2";
+  ctx.fillRect(x + 4, y + 1, 5, 2);
+  ctx.fillRect(x + w - 9, y + 1, 5, 2);
+
+  // 6. ไฟท้าย
   ctx.fillStyle = "#ff3b3b";
-  ctx.fillRect(x + 2, y + h - 4, 6, 3);
-  ctx.fillRect(x + w - 8, y + h - 4, 6, 3);
+  ctx.fillRect(x + 4, y + h - 3, 5, 2);
+  ctx.fillRect(x + w - 9, y + h - 3, 5, 2);
 
   ctx.restore();
 }
@@ -292,19 +333,19 @@ function drawCar(ctx, x, y, w, h, type, colors) {
 function drawGame() {
   gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-  // สลับสีพื้นผิวถนนตามธีม
+  // สลับสีถนน
   const roadGradient = gameCtx.createLinearGradient(0, 0, 0, gameCanvas.height);
   if (isDayMode) {
     roadGradient.addColorStop(0, "#737a85");
     roadGradient.addColorStop(1, "#525760");
   } else {
-    roadGradient.addColorStop(0, "#23262c");
-    roadGradient.addColorStop(1, "#15171b");
+    roadGradient.addColorStop(0, "#1e2127");
+    roadGradient.addColorStop(1, "#111316");
   }
   gameCtx.fillStyle = roadGradient;
   gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-  // ลายรอยยาง
+  // คราบยางมะตอย
   for (const m of roadMarks) {
     gameCtx.fillStyle = isDayMode ? `rgba(0,0,0,${m.alpha * 1.5})` : `rgba(0,0,0,${m.alpha})`;
     gameCtx.beginPath();
@@ -312,17 +353,7 @@ function drawGame() {
     gameCtx.fill();
   }
 
-  // แสงไฟหน้ารถ (กลางคืนจะชัดเจนกว่ากลางวัน)
-  const headlightGlow = gameCtx.createRadialGradient(
-    player.x + player.width / 2, player.y - 10, 10,
-    player.x + player.width / 2, player.y - 10, isDayMode ? 140 : 220
-  );
-  headlightGlow.addColorStop(0, isDayMode ? "rgba(255,255,220,0.12)" : "rgba(255,230,150,0.18)");
-  headlightGlow.addColorStop(1, "rgba(255,230,150,0)");
-  gameCtx.fillStyle = headlightGlow;
-  gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-
-  // ขอบถนน
+  // เส้นขอบทาง
   gameCtx.strokeStyle = isDayMode ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)";
   gameCtx.lineWidth = 3;
   gameCtx.beginPath();
@@ -331,7 +362,7 @@ function drawGame() {
   gameCtx.stroke();
 
   // เส้นประแบ่งเลน
-  gameCtx.strokeStyle = isDayMode ? "#ffffff" : "#ffcc00";
+  gameCtx.strokeStyle = "#ffffff";
   gameCtx.lineWidth = 4;
   gameCtx.setLineDash([22, 18]);
   gameCtx.lineDashOffset = -roadScroll;
@@ -347,18 +378,21 @@ function drawGame() {
   gameCtx.setLineDash([]);
   gameCtx.shadowBlur = 0;
 
-  // วาดสิ่งกีดขวาง
+  // วาดลำแสงไฟหน้ารถทุกคันบนถนน (วาดก่อนตัวรถ เพื่อให้แสงตกกระทบอยู่ใต้ท้องคันข้างหน้า)
+  for (const obs of obstacles) {
+    drawHeadlightBeams(gameCtx, obs.x, obs.y, obs.width, obs.height);
+  }
+  drawHeadlightBeams(gameCtx, player.x, player.y, player.width, player.height);
+
+  // วาดตัวรถสิ่งกีดขวาง
   for (const obs of obstacles) {
     drawCar(gameCtx, obs.x, obs.y, obs.width, obs.height, obs.type, obs.colors);
   }
 
-  // วาดรถผู้เล่น
+  // วาดตัวรถผู้เล่น
   drawCar(gameCtx, player.x, player.y, player.width, player.height, "sedan", playerColors);
-  gameCtx.fillStyle = "#f1f1f1";
-  gameCtx.fillRect(player.x + player.width / 2 - 3, player.y + 4, 2, player.height - 8);
-  gameCtx.fillRect(player.x + player.width / 2 + 1, player.y + 4, 2, player.height - 8);
 
-  // Overlay แจ้งเตือนสถานะ
+  // ข้อความ Overlay
   if (!gameRunning && !gameOver) {
     gameCtx.fillStyle = isDayMode ? "rgba(255, 255, 255, 0.85)" : "rgba(10, 10, 14, 0.82)";
     gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
@@ -389,5 +423,5 @@ function drawGame() {
   }
 }
 
-// Initial Canvas Draw
+// Initial Draw
 drawGame();
