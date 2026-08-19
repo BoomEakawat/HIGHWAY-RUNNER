@@ -4,22 +4,22 @@
 const gameCanvas = document.getElementById("gameCanvas");
 const gameCtx = gameCanvas.getContext("2d");
 
-let isDayMode = false;
+let isDayMode = true;
 let gameRunning = false;
 let gameOver = false;
 let isCountingDown = false;
 let countdownText = "";
 let countdownTimer = null;
 
-let score = 0;
+let carsPassed = 0; // จำนวนรถที่แซงพ้น
 let frame = 0;
 let roadScroll = 0;
 
 const lanes = [75, 225, 375]; 
-let currentLane = 1; // เลนกลางเป็นค่าเริ่มต้น (Index 1)
+let currentLane = 1;
 
 const player = {
-  x: 225 - 22, // พิกัดกึ่งกลางเลนกลางพอดี (203)
+  x: 225 - 22,
   y: 400,
   width: 44,
   height: 60
@@ -31,24 +31,10 @@ let obstacleSpeed = 6;
 let roadMarks = [];
 
 // ===============================
-// Theme Toggle Function
+// Day / Night Environment System
 // ===============================
-function toggleTheme() {
-  isDayMode = !isDayMode;
+function updateThemeVisuals() {
   document.body.classList.toggle("day-theme", isDayMode);
-
-  const themeBtn = document.getElementById("themeToggleBtn");
-  if (isDayMode) {
-    themeBtn.innerHTML = "🌙 โหมดกลางคืน";
-    themeBtn.style.background = "linear-gradient(180deg, #475569, #1e293b)";
-  } else {
-    themeBtn.innerHTML = "☀️ โหมดกลางวัน";
-    themeBtn.style.background = "linear-gradient(180deg, #3b82f6, #1d4ed8)";
-  }
-
-  if (!gameRunning) {
-    drawGame();
-  }
 }
 
 // ===============================
@@ -91,7 +77,6 @@ function randomColorsFor(type) {
 // Game Management
 // ===============================
 function setPlayerLane(laneIndex) {
-  // หากยังอยู่ในช่วงนับถอยหลัง หรือเกมยังไม่เริ่ม จะไม่เปลี่ยนเลนตามท่าทาง
   if (isCountingDown || !gameRunning || gameOver) return;
   currentLane = laneIndex;
 }
@@ -108,72 +93,33 @@ function createRoadMarks() {
   }
 }
 
-// function startGame() {
-//   if (countdownTimer) clearInterval(countdownTimer);
-
-//   gameRunning = true;
-//   gameOver = false;
-//   score = 0;
-//   frame = 0;
-//   roadScroll = 0;
-//   obstacleSpeed = 6;
-//   obstacles = [];
-
-//   // บังคับให้อยู่เลนกลางเสมอตอนเริ่มเกม
-//   currentLane = 1;
-//   player.x = lanes[1] - (player.width / 2);
-
-//   createRoadMarks();
-
-//   // เริ่มนับถอยหลัง 3 วินาที
-//   isCountingDown = true;
-//   countdownText = "3";
-//   document.getElementById("gameStatus").innerHTML = "สถานะเกม: เตรียมพร้อม...";
-//   document.getElementById("gameScore").innerHTML = "คะแนน: 0";
-
-//   let count = 3;
-//   countdownTimer = setInterval(() => {
-//     count--;
-//     if (count > 0) {
-//       countdownText = count.toString();
-//     } else if (count === 0) {
-//       countdownText = "GO!";
-//       if (typeof startEngineSound === "function") startEngineSound();
-//     } else {
-//       clearInterval(countdownTimer);
-//       countdownTimer = null;
-//       isCountingDown = false;
-//       countdownText = "";
-//       document.getElementById("gameStatus").innerHTML = "สถานะเกม: กำลังวิ่ง!";
-//     }
-//   }, 1000);
-// }
-
 function startGame() {
   if (countdownTimer) clearInterval(countdownTimer);
 
   gameRunning = true;
   gameOver = false;
-  score = 0;
+  carsPassed = 0;
   frame = 0;
   roadScroll = 0;
   obstacleSpeed = 6;
   obstacles = [];
+
+  isDayMode = true;
+  updateThemeVisuals();
 
   currentLane = 1;
   player.x = lanes[1] - (player.width / 2);
 
   createRoadMarks();
 
-  // เรียกใช้คำสั่งสตาร์ตและต่อเข้าเสียงขับแบบไร้รอยต่อ
   if (typeof playIgnitionAndDrive === "function") playIgnitionAndDrive();
 
   isCountingDown = true;
   countdownText = "3";
   if (typeof playCountdownBeep === "function") playCountdownBeep(false);
 
-  document.getElementById("gameStatus").innerHTML = "สถานะเกม: เตรียมพร้อม...";
-  document.getElementById("gameScore").innerHTML = "คะแนน: 0";
+  document.getElementById("gameStatus").innerHTML = "READY...";
+  document.getElementById("gameScore").innerHTML = "OVERTAKEN: 0";
 
   let count = 3;
   countdownTimer = setInterval(() => {
@@ -189,7 +135,7 @@ function startGame() {
       countdownTimer = null;
       isCountingDown = false;
       countdownText = "";
-      document.getElementById("gameStatus").innerHTML = "สถานะเกม: กำลังวิ่ง!";
+      document.getElementById("gameStatus").innerHTML = "RACING!";
     }
   }, 1000);
 }
@@ -200,33 +146,14 @@ function endGame() {
   gameRunning = false;
   isCountingDown = false;
 
-  // 4. เสียงชนระเบิด + เสียงพูด "Game Over"
   if (typeof playCrashSound === "function") playCrashSound();
-  setTimeout(() => {
-    if (typeof speakGameOver === "function") speakGameOver();
-  }, 300);
 
-  document.getElementById("gameStatus").innerHTML = "สถานะเกม: ชนแล้ว!";
+  document.getElementById("gameStatus").innerHTML = "CRASHED!";
 }
 
 function restartGame() {
-  if (typeof isRunning !== "undefined" && isRunning) startGame();
-  else startGame();
+  startGame();
 }
-
-// function endGame() {
-//   if (countdownTimer) clearInterval(countdownTimer);
-//   gameOver = true;
-//   gameRunning = false;
-//   isCountingDown = false;
-
-//   if (typeof playCrashSound === "function") playCrashSound();
-//   if (typeof playGameOverMelody === "function") {
-//     setTimeout(playGameOverMelody, 450);
-//   }
-
-//   document.getElementById("gameStatus").innerHTML = "สถานะเกม: ชนแล้ว!";
-// }
 
 // ===============================
 // Physics & Collision
@@ -234,19 +161,13 @@ function restartGame() {
 function updateGame() {
   if (!gameRunning || gameOver) return;
 
-  // เลื่อนรถเข้าสู่เลนที่เลือกอย่างนุ่มนวล
   const targetX = lanes[currentLane] - (player.width / 2);
   player.x += (targetX - player.x) * 0.15;
 
-  // หากอยู่ในช่วงนับถอยหลัง ให้หยุดการเคลื่อนที่ของถนนและสิ่งกีดขวาง
   if (isCountingDown) return;
 
   frame++;
   roadScroll += obstacleSpeed;
-
-  if (typeof updateEngineSound === "function") {
-    updateEngineSound(frame, obstacleSpeed);
-  }
 
   if (frame % 600 === 0) obstacleSpeed += 0.5;
   if (frame % 40 === 0) createObstacle();
@@ -268,9 +189,16 @@ function updateGame() {
 
     if (obstacles[i].y > gameCanvas.height) {
       obstacles.splice(i, 1);
-      score += 10;
+      carsPassed++; // นับจำนวนรถที่แซงพ้น
+
+      // สลับ Day/Night ทุกๆ 10 คัน
+      if (carsPassed % 10 === 0) {
+        isDayMode = !isDayMode;
+        updateThemeVisuals();
+      }
+
       if (typeof playScoreSound === "function") playScoreSound();
-      document.getElementById("gameScore").innerHTML = "คะแนน: " + score;
+      document.getElementById("gameScore").innerHTML = "OVERTAKEN: " + carsPassed;
     }
   }
 }
@@ -339,7 +267,6 @@ function drawHeadlightBeams(ctx, x, y, w, h) {
     return grad;
   };
 
-  // ลำแสงซ้าย
   const leftX = x + 6;
   ctx.fillStyle = createSoftBeamGradient(leftX);
   ctx.beginPath();
@@ -351,7 +278,6 @@ function drawHeadlightBeams(ctx, x, y, w, h) {
   ctx.closePath();
   ctx.fill();
 
-  // ลำแสงขวา
   const rightX = x + w - 10;
   ctx.fillStyle = createSoftBeamGradient(rightX);
   ctx.beginPath();
@@ -369,12 +295,10 @@ function drawHeadlightBeams(ctx, x, y, w, h) {
 function drawCar(ctx, x, y, w, h, type, colors) {
   ctx.save();
 
-  // เงา
   ctx.fillStyle = isDayMode ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.45)";
   drawRoundedRect(ctx, x - 1, y + 3, w + 2, h, 8);
   ctx.fill();
 
-  // ล้อ 4 ล้อ
   const wheelW = 4;
   const wheelH = 10;
   ctx.fillStyle = "#111214";
@@ -383,12 +307,10 @@ function drawCar(ctx, x, y, w, h, type, colors) {
   drawRoundedRect(ctx, x - 1, y + h - 18, wheelW, wheelH, 2); ctx.fill();
   drawRoundedRect(ctx, x + w - wheelW + 1, y + h - 18, wheelW, wheelH, 2); ctx.fill();
 
-  // ตัวถัง
   ctx.fillStyle = colors.body;
   drawRoundedRect(ctx, x, y, w, h, 10);
   ctx.fill();
 
-  // กระจกและห้องโดยสาร
   const glassColor = colors.window || "#bcd4e6";
   ctx.fillStyle = "#1c222b";
   drawRoundedRect(ctx, x + 4, y + 10, w - 8, h - 22, 5);
@@ -406,12 +328,10 @@ function drawCar(ctx, x, y, w, h, type, colors) {
   drawRoundedRect(ctx, x + 6, y + h - 20, w - 12, 6, 2);
   ctx.fill();
 
-  // ไฟหน้า
   ctx.fillStyle = "#fff4c2";
   ctx.fillRect(x + 4, y + 1, 5, 2);
   ctx.fillRect(x + w - 9, y + 1, 5, 2);
 
-  // ไฟท้าย
   ctx.fillStyle = "#ff3b3b";
   ctx.fillRect(x + 4, y + h - 3, 5, 2);
   ctx.fillRect(x + w - 9, y + h - 3, 5, 2);
@@ -425,7 +345,6 @@ function drawCar(ctx, x, y, w, h, type, colors) {
 function drawGame() {
   gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-  // สลับสีถนน
   const roadGradient = gameCtx.createLinearGradient(0, 0, 0, gameCanvas.height);
   if (isDayMode) {
     roadGradient.addColorStop(0, "#737a85");
@@ -437,7 +356,6 @@ function drawGame() {
   gameCtx.fillStyle = roadGradient;
   gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-  // คราบยาง
   for (const m of roadMarks) {
     gameCtx.fillStyle = isDayMode ? `rgba(0,0,0,${m.alpha * 1.5})` : `rgba(0,0,0,${m.alpha})`;
     gameCtx.beginPath();
@@ -445,7 +363,6 @@ function drawGame() {
     gameCtx.fill();
   }
 
-  // เส้นขอบทาง
   gameCtx.strokeStyle = isDayMode ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)";
   gameCtx.lineWidth = 3;
   gameCtx.beginPath();
@@ -453,7 +370,6 @@ function drawGame() {
   gameCtx.moveTo(gameCanvas.width - 6, 0); gameCtx.lineTo(gameCanvas.width - 6, gameCanvas.height);
   gameCtx.stroke();
 
-  // เส้นประแบ่งเลน
   gameCtx.strokeStyle = "#ffffff";
   gameCtx.lineWidth = 4;
   gameCtx.setLineDash([22, 18]);
@@ -470,21 +386,17 @@ function drawGame() {
   gameCtx.setLineDash([]);
   gameCtx.shadowBlur = 0;
 
-  // วาดไฟหน้ารถ
   for (const obs of obstacles) {
     drawHeadlightBeams(gameCtx, obs.x, obs.y, obs.width, obs.height);
   }
   drawHeadlightBeams(gameCtx, player.x, player.y, player.width, player.height);
 
-  // วาดรถสิ่งกีดขวาง
   for (const obs of obstacles) {
     drawCar(gameCtx, obs.x, obs.y, obs.width, obs.height, obs.type, obs.colors);
   }
 
-  // วาดรถผู้เล่น
   drawCar(gameCtx, player.x, player.y, player.width, player.height, "sedan", playerColors);
 
-  // แสดงตัวเลขนับถอยหลัง 3.. 2.. 1.. GO!
   if (isCountingDown) {
     gameCtx.save();
     gameCtx.fillStyle = "rgba(0, 0, 0, 0.35)";
@@ -499,18 +411,16 @@ function drawGame() {
     gameCtx.restore();
   }
 
-  // ข้อความ Overlay ก่อนเริ่มเกม
   if (!gameRunning && !gameOver) {
     gameCtx.fillStyle = isDayMode ? "rgba(255, 255, 255, 0.85)" : "rgba(10, 10, 14, 0.82)";
     gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
     gameCtx.fillStyle = isDayMode ? "#1e293b" : "#ffd166";
     gameCtx.font = "bold 22px Arial";
     gameCtx.textAlign = "center";
-    gameCtx.fillText("กดปุ่ม 'สตาร์ทเครื่อง' ด้านบน", gameCanvas.width / 2, 250);
+    gameCtx.fillText("CLICK 'START ENGINE' ABOVE", gameCanvas.width / 2, 250);
     gameCtx.textAlign = "left";
   }
 
-  // ข้อความ Game Over
   if (gameOver) {
     gameCtx.fillStyle = isDayMode ? "rgba(255, 255, 255, 0.90)" : "rgba(10, 10, 14, 0.88)";
     gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
@@ -522,14 +432,14 @@ function drawGame() {
 
     gameCtx.fillStyle = isDayMode ? "#1e293b" : "#f1f1f1";
     gameCtx.font = "24px Arial";
-    gameCtx.fillText("คะแนนของคุณ: " + score, gameCanvas.width / 2, 270);
+    gameCtx.fillText("CARS OVERTAKEN: " + carsPassed, gameCanvas.width / 2, 270);
     
     gameCtx.fillStyle = isDayMode ? "#d97706" : "#ffd166";
     gameCtx.font = "18px Arial";
-    gameCtx.fillText("กดปุ่ม 'เข้าพิท' เพื่อลองอีกครั้ง", gameCanvas.width / 2, 320);
+    gameCtx.fillText("PRESS 'PIT STOP' TO RETRY", gameCanvas.width / 2, 320);
     gameCtx.textAlign = "left";
   }
 }
 
-// วาดภาพเริ่มต้น
+updateThemeVisuals();
 drawGame();

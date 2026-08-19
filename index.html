@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,28 +20,24 @@
   </div>
 
   <div class="lane-legend">
-    <span class="chip left">◀ LEFT / ซ้าย</span>
-    <span class="chip center">● CENTER / กลาง</span>
-    <span class="chip right">RIGHT / ขวา ▶</span>
+    <span class="chip left">◀ LEFT</span>
+    <span class="chip center">● CENTER</span>
+    <span class="chip right">RIGHT ▶</span>
   </div>
 
   <div class="checker-strip"></div>
 
   <div class="controls">
-    <button id="startBtn" type="button" onclick="initAI()">🔑 สตาร์ทเครื่อง (เปิดกล้อง)</button>
-    <button type="button" onclick="restartGame()">🔧 เข้าพิท / เริ่มเกมใหม่</button>
-    <!-- ปุ่มสลับโหมดกลางวัน/กลางคืน -->
-    <button id="themeToggleBtn" class="btn-theme" type="button" onclick="toggleTheme()">☀️ โหมดกลางวัน</button>
+    <button id="startBtn" type="button" onclick="initAI()">🔑 START ENGINE (CAMERA)</button>
+    <button type="button" onclick="restartGame()">🔧 PIT STOP / RESTART</button>
   </div>
 
   <div class="hud">
     <div class="hud-panel">
-      <div class="hud-label">สถานะเกม</div>
-      <div id="gameStatus">สถานะเกม: ยังไม่เริ่ม</div>
+      <div id="gameStatus">NOT STARTED</div>
     </div>
     <div class="hud-panel">
-      <div class="hud-label">คะแนน</div>
-      <div id="gameScore">คะแนน: 0</div>
+      <div id="gameScore">OVERTAKEN: 0</div>
     </div>
   </div>
 
@@ -67,13 +63,13 @@
 
   <div class="box">
     <h3>Diagnostics</h3>
-    <div id="result">ผลลัพธ์: -</div>
-    <div id="confidence">ความมั่นใจ: -</div>
-    <div id="action">สถานะ: ยังไม่เริ่ม</div>
+    <div id="result">Result: -</div>
+    <div id="confidence">Confidence: -</div>
+    <div id="action">Status: Not started</div>
   </div>
 
   <div class="box">
-    <h3>ความมั่นใจแต่ละ Class</h3>
+    <h3>Class Confidence</h3>
     <div id="class1" class="score">Class 1: -</div>
     <div id="class2" class="score">Class 2: -</div>
     <div id="class3" class="score">Class 3: -</div>

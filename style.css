@@ -196,9 +196,17 @@ button:disabled {
   background: var(--bg-panel);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
-  padding: 10px 16px;
+  padding: 14px 16px;
   box-shadow: 0 4px 12px var(--box-shadow-color);
+  
+  /* จัดให้อยู่กึ่งกลางกล่อง */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 58px;
 }
+
+
 body.day-theme .hud-panel {
   border-color: rgba(0, 0, 0, 0.08);
 }
@@ -214,7 +222,8 @@ body.day-theme .hud-panel {
 #gameStatus, #gameScore {
   font-family: 'Share Tech Mono', monospace;
   font-size: 20px;
-  margin-top: 2px;
+  margin: 0;
+  text-align: center;
 }
 #gameStatus { color: var(--amber); text-shadow: var(--glow-amber); }
 #gameScore  { color: var(--tach-green); }

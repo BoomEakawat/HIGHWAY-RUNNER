@@ -17,8 +17,8 @@ async function initAI() {
 
   try {
     startBtn.disabled = true;
-    startBtn.innerHTML = "กำลังโหลดโมเดล AI...";
-    actionText.innerHTML = "สถานะ: กำลังโหลด...";
+    startBtn.innerHTML = "LOADING AI MODEL...";
+    actionText.innerHTML = "Status: Loading...";
 
     const modelURL = MODEL_URL + "model.json";
     const metadataURL = MODEL_URL + "metadata.json";
@@ -36,16 +36,16 @@ async function initAI() {
     cameraCtx = cameraCanvas.getContext("2d");
 
     isRunning = true;
-    startBtn.innerHTML = "กล้องทำงานแล้ว";
-    actionText.innerHTML = "สถานะ: พร้อมเล่น!";
+    startBtn.innerHTML = "CAMERA ACTIVE";
+    actionText.innerHTML = "Status: READY!";
 
     startGame();
     window.requestAnimationFrame(aiLoop);
   } catch (error) {
     console.error("AI Init Error:", error);
     startBtn.disabled = false;
-    startBtn.innerHTML = "ลองเปิดกล้องใหม่";
-    actionText.innerHTML = "เกิดข้อผิดพลาด: โปรดอนุญาตการใช้กล้อง";
+    startBtn.innerHTML = "RETRY CAMERA";
+    actionText.innerHTML = "Error: Please allow camera access";
   }
 }
 
@@ -85,12 +85,13 @@ async function predict() {
   const resultName = bestPrediction.className.toLowerCase();
   const resultScore = bestPrediction.probability;
 
-  document.getElementById("result").innerHTML = "ผลลัพธ์: " + bestPrediction.className;
-  document.getElementById("confidence").innerHTML = "ความมั่นใจ: " + (resultScore * 100).toFixed(0) + "%";
+  // เปลี่ยนป้าย Diagnostics เป็นภาษาอังกฤษทั้งหมด
+  document.getElementById("result").innerHTML = "Result: " + bestPrediction.className;
+  document.getElementById("confidence").innerHTML = "Confidence: " + (resultScore * 100).toFixed(0) + "%";
 
   if (resultScore > CONFIDENCE_LIMIT) {
     currentPose = resultName;
-    document.getElementById("action").innerHTML = "สถานะ: " + currentPose;
+    document.getElementById("action").innerHTML = "Status: " + currentPose.toUpperCase();
     
     if (currentPose.includes("left") || currentPose.includes("ซ้าย")) {
       setPlayerLane(0);
@@ -108,10 +109,8 @@ function drawPose(pose) {
   const cameraCanvas = document.getElementById("cameraCanvas");
   if (!cameraCanvas || !cameraCtx) return;
 
-  // 1. เคลียร์ภาพเก่าทิ้งทุกเฟรม ป้องกันภาพซ้อน
   cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-  // 2. สั่งยืดภาพวิดีโอจากกล้องให้เต็มกรอบ Canvas (400x400) เสมอ
   if (webcam && webcam.canvas) {
     cameraCtx.drawImage(
       webcam.canvas, 
@@ -121,7 +120,6 @@ function drawPose(pose) {
     );
   }
 
-  // 3. วาดเส้นและจุดโครงร่างร่างกาย
   if (pose) {
     tmPose.drawKeypoints(pose.keypoints, 0.5, cameraCtx);
     tmPose.drawSkeleton(pose.keypoints, 0.5, cameraCtx);
