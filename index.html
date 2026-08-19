@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3-Lane Highway Runner (Pose Control)</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;700;800&family=Sarabun:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="marquee">
+    <h2 class="title">🏁 3-LANE HIGHWAY RUNNER 🏁</h2>
+  </div>
+
+  <div class="lane-legend">
+    <span class="chip left">◀ LEFT / ซ้าย</span>
+    <span class="chip center">● CENTER / กลาง</span>
+    <span class="chip right">RIGHT / ขวา ▶</span>
+  </div>
+
+  <div class="checker-strip"></div>
+
+  <div class="controls">
+    <button id="startBtn" type="button" onclick="initAI()">🔑 สตาร์ทเครื่อง (เปิดกล้อง)</button>
+    <button type="button" onclick="restartGame()">🔧 เข้าพิท / เริ่มเกมใหม่</button>
+    <!-- ปุ่มสลับโหมดกลางวัน/กลางคืน -->
+    <button id="themeToggleBtn" class="btn-theme" type="button" onclick="toggleTheme()">☀️ โหมดกลางวัน</button>
+  </div>
+
+  <div class="hud">
+    <div class="hud-panel">
+      <div class="hud-label">สถานะเกม</div>
+      <div id="gameStatus">สถานะเกม: ยังไม่เริ่ม</div>
+    </div>
+    <div class="hud-panel">
+      <div class="hud-label">คะแนน</div>
+      <div id="gameScore">คะแนน: 0</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="screen-unit">
+      <div class="screen-label">Dash Cam</div>
+      <div class="bezel headlight">
+        <div class="screen-wrap">
+          <canvas id="cameraCanvas" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-unit">
+      <div class="screen-label">Road View</div>
+      <div class="bezel taillight">
+        <div class="screen-wrap">
+          <canvas id="gameCanvas" width="450" height="500"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>Diagnostics</h3>
+    <div id="result">ผลลัพธ์: -</div>
+    <div id="confidence">ความมั่นใจ: -</div>
+    <div id="action">สถานะ: ยังไม่เริ่ม</div>
+  </div>
+
+  <div class="box">
+    <h3>ความมั่นใจแต่ละ Class</h3>
+    <div id="class1" class="score">Class 1: -</div>
+    <div id="class2" class="score">Class 2: -</div>
+    <div id="class3" class="score">Class 3: -</div>
+  </div>
+
+  <!-- Library Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8.3/dist/teachablemachine-pose.min.js"></script>
+
+  <!-- Application Scripts -->
+  <script src="game.js"></script>
+  <script src="ai.js"></script>
+</body>
+</html>
